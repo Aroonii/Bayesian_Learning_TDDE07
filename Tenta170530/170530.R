@@ -46,7 +46,7 @@ hessian_posterior = -OptParams$hessian
 
 # take inverse for using it in the formula
 hessian_posterior = (solve(hessian_posterior))
-sigma_square = hessian_posterior[1,1]
+sigma = sqrt(hessian_posterior[1,1])
 
 #Draw samples from Betas posterior distribution. 
 set.seed(12345)
@@ -55,9 +55,9 @@ set.seed(12345)
 # plot the pdf over a grid of values => Since we have it in a good form we can do it immedeatly and directly get
 # the normalized values 
 
-approximate_density_distribution = dnorm(thetaGrid, mean = my_posterior, sd = sqrt(sigma_square))
-plot(posterior_normalized)
-lines(approximate_density_distribution, col = "red", type ="b")
+approximate_density_distribution = dnorm(thetaGrid, mean = my_posterior, sd = sigma)
+plot(thetaGrid, posterior_normalized)
+lines(thetaGrid, approximate_density_distribution, col = "red", type ="b")
 
 
 #C) 
@@ -82,8 +82,7 @@ for (i in 1:1000){
   outcome = append(outcome, rice)
 }
 
-# histogram representing prob of woman work
-#Will be normal since sum  of two random normal is normal
+#Histrogram of the predictive 
 hist(outcome, main="Predictive distribution x_tilde", xlab="rice", ylab="Acumulation of rice out of 1000 draws")
 
 
@@ -95,25 +94,60 @@ bids = bids
 bidsCounts <- table(bids)  # data2Counts is a frequency table of counts.
 xGrid <- seq(min(bids),max(bids))  # A grid used as input to GibbsMixPois.R over which the mixture density is evaluated.
 
+#a
+#Copute the posterior distribution for theta and plot it => the posterior pdf
 n = auctions = length(bids)
 alpha = 1
 beta = 1
 amount_bids = sum(bids)
 
+#Posterior parameters for gamma distriution
 alpha_posterior = amount_bids + alpha
 beta_posterior = n + beta
 
-gamma_grid = seq(2,4, length = 1000)
-plot(gamma_grid, dgamma(gamma_sequence, alpha_posterior, beta_posterior), xlab = "Theta")
+#Plot the posterior distribution for theta (gamma funktion) 
+# => draws from gamma density distribution over a seequence of different values
+gamma_grid = seq(3.4,3.9, length = 1000)
+plot(gamma_grid, dgamma(gamma_grid, alpha_posterior, beta_posterior), xlab = "Theta", ylab = "Density")
 
-
+#b
 #Does the poisson model describe the distribution of the data well ?
-#=> Compare draws from the possion distribution with the real data
+#=> Model evaluation => Make draws from the posterior of theta. Use these to plug in
+# to the distribution of the data (in this casepossion) and make new replica draws
 data_density = density(bids)
 plot(data_density)
 
 xGrid = seq(min(bids),max(bids))
 
-data_dist = bids/sum(bids)
-data_D = bidsCounts/sum(bidsCounts)
-plot(xGrid, data_D)
+#Manually create the density of the data
+#Normalize
+data_dens = bidsCounts/sum(bidsCounts)
+plot(xGrid, data_dens, type = 'l')
+
+#Make repliica draws using draws from posterior
+
+set.seed(12345)
+theta_draw = rgamma(1000, alpha_posterior, beta_posterior)
+#For each draw theta we want to compute the possion distribution (distribution for
+# x values)
+
+density_mean = rep(0,12)
+for (i in 1:n){
+#Compute poission distribution over Xgrid = över de x värden vi vill distribuera 
+# proba
+density_mean = density_mean + dpois(xGrid, theta_draw[i])
+}
+#Make a T function (condition) that we can compare with the original data. in this 
+#case we compute the mean density for each grid value
+density_mean = density_mean/n
+
+plot(xGrid, data_dens, type = 'l' )
+
+lines(density_mean)
+
+
+
+
+
+
+
