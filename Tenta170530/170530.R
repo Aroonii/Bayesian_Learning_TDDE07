@@ -384,7 +384,6 @@ quantile(beta2, probs = c(0.25,0.9725))
 quantile(beta3, probs = c(0.25,0.9725))
 quantile(beta4, probs = c(0.25,0.9725))
 
-#
 
 #B
 #Investigate if the effect on mpg is different in cars with 6 cylinders compared with 8 cylindes
@@ -409,9 +408,7 @@ mpg_calc = function(prediction_data, betas, sigma){
   return(mpg)
 }
 
-
 prediction_data = c(1, 3.5, 0, 0)
-
 mpg = c()
 set.seed(12345)
 for (i in 1:nIter){
@@ -439,14 +436,18 @@ xSum = sum(x)
 #Predictive dsitribution wil be proportional to (according to calucaltion)
 #gamma(k, + sum(x) + b)/gamma(k + alpha + n + sum(x) + 1 )
 
+utility = 0
+prob = c()
+win = c()
+for (i in 0:10){
+prob = append(prob, (gamma(i + xSum + beta)/gamma(i + alpha + n + xSum + 1 )))
+win = append(win, ((2^i -1) -2))
+}
+#Normalize so that sum of probabilities sum to 1
+prob = prob/sum(prob)
 
-prob = gamma(10 + xSum + beta)/gamma(10 + alpha + n + xSum + 1 )
-plot(density(prob))
-win = (2^k -1) -2
-
-utility = prob*win
-
-
+Expected_utility = sum(prob*win)
+Expected_utility
 
 
 
