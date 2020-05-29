@@ -83,7 +83,7 @@ cauchy = draws[,1] + draws[,2]*tan(pi*(0.99 - 0.5))
 
 
 # Reading the data from file
-library(MASS)
+#library(MASS)
 BostonHousing = Boston
 y = BostonHousing$medv
 X = cbind(1,BostonHousing[,1:13]) # Adding a column of ones for the intercept
@@ -92,7 +92,6 @@ covNames <- names(X)
 y <- as.numeric(y)
 X <- as.matrix(X)
 
-install.packages("mvtnorm")
 library(mvtnorm)
 
 # Defining a function that simulates from the scaled inverse Chi-square distribution
@@ -149,8 +148,80 @@ BayesLinReg <- function(y, X, mu_0, Omega_0, v_0, sigma2_0, nIter){
   return(results = list(sigma2Sample = sigma2Sample, betaSample=betaSample))
 }
 my_0 = rep(0, 14)
-Omega_0 = diag(1, 14)
+Omega_0 = diag(0, 14)
 Omega_0 = Omega_0*0.01
-sigma = sd(X)
+sigma = 6
 
-joint_posterior = BayesLinReg(y, X, mu_0 = my_0,Omega_0 = Omega_0,  v_0 = 4, sigma2_0 = sigma^2 , nIter = 100 )
+joint_posterior = BayesLinReg(y, X, mu_0 = my_0,Omega_0 = Omega_0,  v_0 = 4, sigma2_0 = sigma^2 , nIter = 5000 )
+betas = joint_posterior$betaSample
+sigmas = joint_posterior$sigma2Sample
+
+betas_estimate = c()
+betas_quantile = matrix(0, ncol(betas), 2)
+#Point estimator - Quadratiq loss => posterior mean
+for (i in 1:ncol(betas)){
+  betas_estimate = append(betas_estimate, mean(betas[,i]))
+  quantiles_full = quantile(betas[,i], probs = seq(0,1, 0.025))
+  betas_quantile[i,] = c(quantiles_full[2], quantiles_full[40])
+}
+
+sigma_quantile =  quantile(sigma, probs = seq(0,1, 0.025))
+sigma_quantile = c(sigma_quantile[2], sigma_quantile[40])
+
+#Nrooms is the 8th covariate
+betas_quantile[7,]
+#says that one unit increase of number of rooms will increase the median value with between 1.4611 and 5.76 X1000 $
+
+
+
+# find the probability of a new observation for a new obervation holding X data
+prediction_data = c(1.0000, 10, 0.0000, 18.1000, 0.0000, 0.6710, 6.9680, 91.9000, 1.4165, 24.0000, 666.0000, 20.2000, 396.9000, 17.2100 )
+
+set.seed(12345)
+mdv_pred = c()
+for (i in 1:nrow(betas)){
+pred = sum(betas[i,]*prediction_data) + rnorm(1, 0, sqrt(sigmas[i])) 
+mdv_pred = append(mdv_pred, pred)
+}
+
+hist(mdv_pred)
+mean(mdv_pred)
+
+sum(mdv_pred>30)/length(mdv_pred)
+#mdv_pred = ifelse(mdv_pred >= 30, 1, 0)
+probability = sum(mdv_pred)/length(mdv_pred)
+probability
+
+##4
+#let x1..x2 | theta ~ exp(theta)
+nSim = 1000
+Y =c(220, 323, 174, 229)
+n = 4
+sumY = sum(Y)
+alpha = 25
+Beta = 0.1
+alpha_posterior = sumY + alpha
+beta_posterior = n + Beta
+gamma_draws = rgamma(nSim, sumY + alpha, n + Beta)
+
+poisson_draws = c()
+for (i in 1:nSim){
+poisson_draws = append(poisson_draws, rpois(1, gamma_draws[i]))
+
+}
+hist(poisson_draws, 50, freq = FALSE)
+sum(poisson_draws<=200)/nSim
+
+#when n goes toward large the expected value will go towards the mean
+expected_X = round(mean(poisson_draws))
+
+aGrid = seq(expected_X-100, expected_X+100)
+utility_vec = c()
+for (i in aGrid){
+  utility_vec = append(utility_vec, mean(utility(i, poisson_draws)))
+}
+plot(aGrid,utility_vec)
+
+aGrid[which.max(utility_vec)]
+
+
