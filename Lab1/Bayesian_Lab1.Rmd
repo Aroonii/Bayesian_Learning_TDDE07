@@ -257,6 +257,18 @@ plot(number, vec, type='l', xlab='Number of draws', ylab='Mean of theta')
 plot(deviation)
 plot(number, deviation, type='l', xlab='Number of draws', ylab='deviation')
 
+
+#USing the alpha and B from teh psoterior distribution
+variance_posterior= ((a+s)*(b+f)/((a+s+b+f)^2*(a + s + b +f +1)))^(1/2)
+expected_mean = (a +s)/(a + s + b +f)
+
+
+# The posterior a beta(alpha + s, beta + f). According to the table of distributions we see formulas for 
+#E[posterior] and v[posterior] => E[posterior] = (a +s)/(a + s + b +f). 
+#V[posterior] = (a+s)(b+f)/(a+s+b+f)^2*(a + s + b +f +1)
+# Plot these and see that as n gets large the values converge to this
+
+
 # b)
 # Use simulation (nDraws = 10000) to compute the posterior probability 
 # Pr(?? > 0.3|y) and compare with the exact value [Hint: pbeta()].
@@ -293,7 +305,7 @@ hist(logdraws)
 
 # a)
 # Simulate 10, 000 draws from the posterior of ??2
-# (assuming Âµ = 3.7) and compare with the theoretical 
+# (assuming µ = 3.7) and compare with the theoretical 
 # Inv ??? ??2(n, ?? 2) posterior distribution.
 
 my = 3.7
@@ -337,7 +349,7 @@ lines(xrange, deviations, type="l",col="red")
 #coefficient G for the current data se
 
 #Use draws from posterior to form GiniCoeffient
-Gini_coefficients = 2*pnorm(deviationPostDraw/sqrt(2),0,1)-1
+Gini_coefficients = 2*pnorm(sqrt(deviationPostDraw)/sqrt(2),0,1)-1
 Gini_density = density(Gini_coefficients)
 plot(Gini_density, main = "Distribution of Gini Coefficients", xlab = "Gini Coefficient", ylab = "Probability Density")
 
@@ -348,7 +360,7 @@ plot(Gini_density, main = "Distribution of Gini Coefficients", xlab = "Gini Coef
 
 GiniQuantiles = quantile(Gini_coefficients, probs=seq(0,1,0.05))
 Crediblerange = c(GiniQuantiles[2],GiniQuantiles[20])
-# gets range (0.046,0.21)
+# gets range (0.1385257,0.3431806)
 
 #Also, do a kernel density estimate of the posterior of G using the density function in R with
 #default settings, and use that kernel density estimate to compute a 90% Highest
@@ -357,11 +369,25 @@ Crediblerange = c(GiniQuantiles[2],GiniQuantiles[20])
 # using library from CRAN to get highest (posterior) density interval
 library(HDInterval)
 hdiRange = hdi(Gini_density, credMass=0.9)
-# gets range (0.033,0.176)
+# gets range (0.1371345,0.3431806)
 
 hist(Gini_coefficients)
 plot(Gini_density)
 
+vec = c()
+#Alternatively using sort of the densities
+sorted_normalized_y = sort(Gini_density$y, decreasing = TRUE)/sum(Gini_density$y)
+sorted_x = Gini_density$x[order(-Gini_density$y)]
+
+count = 0
+summa = 0
+while(summa <= 0.95){
+  count = count + 1
+  summa = sorted_normalized[count] + summa
+  
+}
+a = min(sorted_x[1:count-1])
+b = max(sorted_x[1:count-1])
 
 # Assignment 3
 # a) 
@@ -400,6 +426,9 @@ plot(sequence, k_posterior, main = "Posterior distribution of K", xlab = "K", yl
 
 k_index = which(k_posterior == max(k_posterior))
 k_mode = sequence[k_index]
+k_mode
+print(k_mode)
+
 
 ```
 

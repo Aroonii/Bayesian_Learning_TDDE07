@@ -75,7 +75,7 @@ rRice <-function(n = 1, theta = 1, psi = 1){
 outcome =c()
 set.seed(12345)
 for (i in 1:1000){
-  #nake draw from posterior distr.
+  #nake draw from posterior distr.  
   theta_draw = rnorm(n = 1, mean = my_posterior, sd = sigma)
   #plug in draw and make fraw from predictions distr. 
   rice = rRice(1,theta_draw,1)

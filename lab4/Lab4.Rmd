@@ -1,0 +1,157 @@
+---
+title: "Lab4"
+output: html_document
+---
+
+
+# Lab 4
+
+#Assignment 1
+```{r pressure, echo = FALSE, out.width="60%"}
+knitr::include_graphics("1a.PNG")
+```
+
+*1a*
+We plottet the AR process for phi = 0.99, phi = -0.99 and phi = 0.5. The value of phi determines the dependence on the previous term where a higher positive value will result in a higher dependence. When the parameter is negative the value at t is, in general, the oppostite sign of that at t-1. Resultingly, when phi is set to negative the dependence will be opposite so if the previosu xt has been larger than my (going upwards) anegative phi value will istead draw the next xt+1 downwards. This gives us a negative correlation. If phi > 1 or < -1 the process becomes instable since it allows for the values to become larger than the expected value.
+
+```{r}
+library(rstan)
+
+
+t = seq(1,200, 1)
+my = 10
+sigma_square = 2
+phi = -0.95
+
+time_points = c()
+set.seed(12345)
+AR_process = function(t, phi){
+  time_points = c()
+
+for (i in 1:length(t)){
+  if(i == 1){
+    time_points[i] = my
+    next
+  }
+  error_term = rnorm(1, mean = 0, sd = sqrt(sigma_square))
+  
+  time_points[i] = my + phi*(time_points[i-1] - my) + error_term
+}
+return(time_points)
+}
+
+
+plot(t, AR_process(t, -.99), main = "phi = -0.99", ylab = "Xt", type = 'l')
+plot(t, AR_process(t, -.5), main = "phi = -0.5", ylab = "Xt", type = 'l')
+plot(t, AR_process(t, 0.5), main = "phi = 0.5", ylab = "Xt", type = 'l')
+plot(t, AR_process(t, 0.99), main = "phi = 0.99", ylab = "Xt", type = 'l')
+plot(t, AR_process(t, 1.1), main = "phi = 1.1", ylab = "Xt", type = 'l')
+plot(t, AR_process(t, -1.1), main = "phi = -1.1", ylab = "Xt", type = 'l')
+
+
+
+```
+
+```{r pressure, echo = FALSE, out.width="60%"}
+knitr::include_graphics("0.9.PNG")
+```
+
+```{r pressure, echo = FALSE, out.width="60%"}
+knitr::include_graphics("-0.9.PNG")
+```
+
+```{r pressure, echo = FALSE, out.width="60%"}
+knitr::include_graphics("0.5.PNG")
+```
+
+
+*1b*
+
+If no priors are specified the models assumes flat priors. 
+Our result from the stan gave following data when setting phi to = 0.95: 
+
+For my:
+Credible 0.95 interval -> (0.180,1.367)
+Mean -> 0.765
+Nr of effective posterior samples -> 2416
+
+For phi:
+Credible 0.95 interval -> (0.891,0.986)
+Mean -> 0.939
+Nr of effective posterior samples -> 2489
+
+For sigma:
+Credible 0.95 interval -> (1.234,1.502)
+Mean -> 1.361
+Nr of effective posterior samples -> 3740
+
+Strangely enough the number of effective samples for sigma exceeded the number of independent draws for said parameter. Overall the stan model fails to estimate the value for my, but estimates sigma very well. The value for phi was pretty accurate as well, almost 0.95. Since phi is close to 1, my gives very little impact to each iteration which might make it hard to estimate.
+
+```{r pressure, echo = FALSE, out.width="60%"}
+knitr::include_graphics("stan.PNG")
+```
+
+Our result from the stan gave following data when setting phi to = 0.3: 
+
+For my:
+Credible 0.95 interval -> (4.71,7.29)
+Mean -> 6
+Nr of effective posterior samples -> 2413
+
+For phi:
+Credible 0.95 interval -> (0.274,0.443)
+Mean -> 0.399
+Nr of effective posterior samples -> 2489
+
+For sigma:
+Credible 0.95 interval -> (1.283,1.565)
+Mean -> 1.413
+Nr of effective posterior samples -> 3546
+
+The stan model again fails to estimate the value for my, but is much closer this time. The model again estimates sigma very well. The value for phi was a little less accurate but the real value is still contained in the credible interval. The model did better job predicting my when less weight was given to the previous term. 
+
+
+*For each of the two data sets, evaluate the convergence of the samplers and plot the joint posterior of my and phi.*
+
+My converges to 0.765 when the real phi is 0.95, and to 6 when the real phi is 0.3, which can be seen in the graphs below. The estimations are pretty bad considering that the real my is 10, especially for when the real phi is 0.95. As mentioned earlier this might be due to that my matters less when phi is higher, since then more weight is given to the previous sample point instead.
+
+
+```{r pressure, echo = FALSE, out.width="60%"}
+knitr::include_graphics("convergence_my_0.95.PNG")
+```
+
+```{r pressure, echo = FALSE, out.width="60%"}
+knitr::include_graphics("convergence_my_0.3.PNG")
+```
+
+Phi converges to 0.939 when the real phi is 0.95, and to 0.399 when the real phi is 0.3, which can be seen in the following graphs; (as mentioned earlier, when more weight is given to the previous sample point phi is estimated better)
+
+
+```{r pressure, echo = FALSE, out.width="60%"}
+knitr::include_graphics("convergence_phi_0.95.PNG")
+```
+
+```{r pressure, echo = FALSE, out.width="60%"}
+knitr::include_graphics("convergence_phi_0.3.PNG")
+```
+
+We plotted the joint posterior of phi and my and got the following plots. As seen below it seems not to be possible to obtain correct values for phi and my at the same time. If bigger weight is given to one of them, the estimation becomes better.  
+
+```{r pressure, echo = FALSE, out.width="60%"}
+knitr::include_graphics("joint95.PNG")
+```
+
+```{r pressure, echo = FALSE, out.width="60%"}
+knitr::include_graphics("joint0.3.PNG")
+```
+
+
+
+
+
+```{r, echo = FALSE, out.width="60%"}
+knitr::include_graphics("2c.PNG")
+```
+
+
+

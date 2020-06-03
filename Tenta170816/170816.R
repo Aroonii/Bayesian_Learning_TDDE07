@@ -72,9 +72,10 @@ hessian_posterior = solve(hessian_posterior)
 library(mvtnorm)
 
 #Fattar ej
-draws = rmvnorm(1000, mean = betas_posterior, sigma =hessian_posterior )
+draws = rmvnorm(5000, mean = betas_posterior, sigma =hessian_posterior )
 cauchy = draws[,1] + draws[,2]*tan(pi*(0.99 - 0.5))
 
+hist(cauchy, 50)
 
 
 
